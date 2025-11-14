@@ -16,25 +16,32 @@ dnf5 install -y tmux zsh
 
 # Install COSMIC and related components
 dnf5 install -y \
-    cosmic-comp \
-    cosmic-session \
-    cosmic-settings \
-    cosmic-launcher \
-    cosmic-files \
     cosmic-edit \
-    cosmic-term \
-    cosmic-panel \
+    cosmic-files \
+    cosmic-player \
+    cosmic-session \
+    cosmic-store \
+    cosmic-app-library \
     cosmic-applets \
-    cosmic-workspace \
-    cosmic-osd \
-    cosmic-notifications \
-    cosmic-screenshot \
-    cosmic-greeter \
     cosmic-bg \
-    cosmic-icons \
-    cosmic-gtk-theme \
-    cosmic-wallpapers \
-    cosmic-applibrary
+    cosmic-comp \
+    cosmic-config-fedora \
+    cosmic-greeter \
+    cosmic-icon-theme \
+    cosmic-idle \
+    cosmic-initial-setup \
+    cosmic-launcher \
+    cosmic-notifications \
+    cosmic-osd \
+    cosmic-panel \
+    cosmic-randr \
+    cosmic-screenshot \
+    cosmic-settings \
+    cosmic-settings-daemon \
+    cosmic-term \
+    cosmic-workspaces \
+    xdg-desktop-portal-cosmic \
+    cosmic-wallpapers
 
 #### Example for enabling a System Unit File
 systemctl enable podman.socket

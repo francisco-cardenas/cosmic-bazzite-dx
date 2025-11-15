@@ -17,10 +17,6 @@ source $ZSH/oh-my-zsh.sh
 # check the dnf plugins commands here
 # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/dnf
 
-
-# fastfetch. Will be disabled if above colorscript was chosen to install
-fastfetch -c $HOME/.config/fastfetch/config-compact.jsonc
-
 # Set-up FZF key bindings (CTRL R for fuzzy history finder)
 source <(fzf --zsh)
 

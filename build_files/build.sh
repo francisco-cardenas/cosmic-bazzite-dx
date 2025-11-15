@@ -10,9 +10,8 @@ set -ouex pipefail
 # https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/updates/39/x86_64/repoview/index.html&protocol=https&redirect=1
 
 # Install base tools
-dnf5 install -y tmux zsh
+dnf5 install -y tmux zsh cups hplip
 
-### Install COSMIC Desktop Environment
 
 # Install COSMIC and related components
 dnf5 install -y \
@@ -46,3 +45,5 @@ dnf5 install -y \
 #### Example for enabling a System Unit File
 systemctl enable podman.socket
 
+### Configure ZSH
+install -Dm644 /usr/share/custom/zshrc /etc/skel/.zshrc

@@ -14,6 +14,10 @@ dnf5 -y install dnf-plugins-core
 # Add brave repo
 dnf5 config-manager addrepo --from-repofile=https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo
 
+# Pre-create directory needed by Brave
+mkdir -p /opt/brave.com
+chmod 755 /opt/brave.com
+
 # Install base tools
 dnf5 install -y tmux zsh brave-browser cups hplip
 

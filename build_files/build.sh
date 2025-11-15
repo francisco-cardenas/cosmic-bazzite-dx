@@ -46,7 +46,7 @@ dnf5 install -y \
 systemctl enable podman.socket
 
 ### Configure ZSH
-install -Dm644 files/etc/skel/.zshrc /etc/skel/.zshrc
+install -Dm644 /ctx/files/etc/skel/.zshrc /etc/skel/.zshrc
 
 ### Post install script to $HOME
-install -Dm755 files/etc/skel/.config/postinstall.sh /etc/skel/.config/postinstall.sh
+install -Dm755 /ctx/files/etc/skel/.config/postinstall.sh /etc/skel/.config/postinstall.sh

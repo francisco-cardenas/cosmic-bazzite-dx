@@ -9,17 +9,8 @@ set -ouex pipefail
 # List of rpmfusion packages can be found here:
 # https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/updates/39/x86_64/repoview/index.html&protocol=https&redirect=1
 
-dnf5 -y install dnf-plugins-core
-
-# Add brave repo
-dnf5 config-manager addrepo --from-repofile=https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo
-
-# Pre-create directory needed by Brave
-mkdir -p /opt/brave.com
-chmod 755 /opt/brave.com
-
 # Install base tools
-dnf5 install -y tmux zsh brave-browser cups hplip
+dnf5 install -y tmux zsh cups hplip
 
 
 # Install COSMIC and related components

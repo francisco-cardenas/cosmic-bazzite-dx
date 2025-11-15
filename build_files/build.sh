@@ -45,5 +45,10 @@ dnf5 install -y \
 #### Example for enabling a System Unit File
 systemctl enable podman.socket
 
+ls /ctx 
+
 ### Configure ZSH
-install -Dm644 /usr/share/custom/zshrc /etc/skel/.zshrc
+install -Dm644 /ctx/files/etc/skel/.zshrc /etc/skel/.zshrc
+
+### Post install script to $HOME
+install -Dm755 /ctx/files/etc/skel/post-install.sh /etc/skel/post-install.sh

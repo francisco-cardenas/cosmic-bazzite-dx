@@ -48,7 +48,7 @@ systemctl enable podman.socket
 ls /ctx 
 
 ### Configure ZSH
-install -Dm644 /ctx/files/etc/skel/.zshrc /etc/skel/.zshrc
+install -Dm644 /ctx/files/etc/skel/.zshrc /usr/share/defaults/skel/.zshrc 
 
 ### Post install script to $HOME
-install -Dm755 /ctx/files/etc/skel/post-install.sh /etc/skel/post-install.sh
+install -Dm755 /ctx/files/etc/skel/post-install.sh /usr/share/defaults/skel/.post-install.sh

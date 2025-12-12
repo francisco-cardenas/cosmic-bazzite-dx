@@ -19,7 +19,6 @@ dnf5 install -y \
     cosmic-files \
     cosmic-player \
     cosmic-session \
-    cosmic-store \
     cosmic-app-library \
     cosmic-applets \
     cosmic-bg \

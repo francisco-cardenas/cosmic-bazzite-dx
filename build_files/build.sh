@@ -51,7 +51,11 @@ ls /ctx
 install -Dm644 /ctx/files/etc/skel/.zshrc /usr/share/defaults/skel/.zshrc 
 
 ### Post install script to $HOME
-install -Dm755 /ctx/files/etc/skel/post-install.sh /usr/share/defaults/skel/.post-install.sh
+install -Dm755 /ctx/files/etc/skel/post-install.sh /usr/share/defaults/skel/post-install.sh
 
-# Dracut snippet for initramfs to include fido2 support
+### Dracut snippet for initramfs to include fido2 support
 install -Dm0644 /ctx/files/etc/dracut.conf.d/fido2.conf /etc/dracut.conf.d/fido2.conf
+
+### Enroll fido2 luks script
+
+install -Dm755 /ctx/files/etc/skel/enroll-fido2-luks.sh  /usr/share/defaults/skel/enroll-fido2-luks.sh

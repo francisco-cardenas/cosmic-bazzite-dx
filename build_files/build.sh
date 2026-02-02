@@ -57,5 +57,4 @@ install -Dm755 /ctx/files/etc/skel/post-install.sh /usr/share/defaults/skel/post
 install -Dm0644 /ctx/files/etc/dracut.conf.d/fido2.conf /etc/dracut.conf.d/fido2.conf
 
 ### Enroll fido2 luks script
-
 install -Dm755 /ctx/files/etc/skel/enroll-fido2-luks.sh  /usr/share/defaults/skel/enroll-fido2-luks.sh

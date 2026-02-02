@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Configure LUKS decryption using YubiKey FIDO2 (systemd-cryptenroll) on rpm-ostree systems (Bazzite)
+# Configure LUKS decryption using YubiKey FIDO2 (systemd-cryptenroll)
 #
 # - Auto-detects root LUKS device via /sysroot (composefs-safe)
 # - Enrolls FIDO2 on that LUKS block device
@@ -184,6 +184,30 @@ main() {
   - Prompt for reboot
 
 \e[1;33mImportant:\e[0m Keep at least one passphrase slot as a fallback."
+
+  echo -e "\e[1;31m
+████████████████████████████████████████████████████████████
+⚠️  WARNING – POTENTIAL DATA LOSS / BOOT FAILURE RISK ⚠️
+████████████████████████████████████████████████████████████
+
+This script modifies LUKS metadata and early-boot configuration.
+
+Incorrect use MAY RESULT IN:
+  • An unbootable system
+  • Loss of access to encrypted data
+  • Requirement to recover using a LUKS passphrase or backup
+
+BEFORE PROCEEDING, ENSURE:
+  • You KNOW your existing LUKS passphrase
+  • You have tested LUKS unlock manually
+  • Your YubiKey FIDO2 PIN is set
+  • You understand this is a SYSTEM-LEVEL change
+
+THIS SCRIPT MAKES NO GUARANTEES.
+YOU PROCEED ENTIRELY AT YOUR OWN RISK.
+
+████████████████████████████████████████████████████████████
+\e[0m"
 
   if $DRY_RUN; then
     warn "DRY-RUN mode enabled: no changes will be made."

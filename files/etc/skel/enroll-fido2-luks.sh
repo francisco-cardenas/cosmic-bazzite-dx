@@ -2,8 +2,7 @@
 # Configure LUKS decryption using YubiKey FIDO2 (systemd-cryptenroll)
 #
 # - Auto-detects root LUKS device via /sysroot (composefs-safe)
-# - Enrolls FIDO2 on ALL LUKS block devices (detected via lsblk FSTYPE=crypto_LUKS)
-#   - Skips devices that already have a FIDO2 token enrolled
+# - Enrolls FIDO2 on that LUKS block device
 # - Updates /etc/crypttab (even with multiple entries) to include fido2-device=auto
 # - Enables rpm-ostree initramfs regeneration
 #
@@ -59,6 +58,7 @@ done
 # Strip findmnt bracket subpaths:
 #   /dev/dm-0[/root] -> /dev/dm-0
 strip_bracket_subpath() {
+  # remove '[' and everything after it
   sed 's/\[.*$//'
 }
 
@@ -68,6 +68,7 @@ detect_root_luks_device() {
   sysroot_src_raw="$(findmnt -n -o SOURCE /sysroot 2>/dev/null || true)"
   [[ -n "$sysroot_src_raw" ]] || { error "Unable to detect /sysroot SOURCE (is /sysroot mounted?)"; return 1; }
 
+  # Fix: findmnt may return /dev/dm-0[/root] — strip bracket subpath
   sysroot_src="$(echo "$sysroot_src_raw" | strip_bracket_subpath)"
   sysroot_src="$(echo -n "$sysroot_src" | awk '{$1=$1; print}')"  # trim whitespace
 
@@ -93,101 +94,17 @@ detect_root_luks_device() {
 
   info "Backing device from cryptsetup: $luks_dev"
 
-  [[ -b "$luks_dev" ]] || { error "Detected backing device is not a block device: $luks_dev"; return 1; }
-  cryptsetup isLuks "$luks_dev" >/dev/null 2>&1 || { error "Detected backing device is not LUKS: $luks_dev"; return 1; }
+  if [[ ! -b "$luks_dev" ]]; then
+    error "Detected backing device is not a block device: $luks_dev"
+    return 1
+  fi
+
+  if ! cryptsetup isLuks "$luks_dev" >/dev/null 2>&1; then
+    error "Detected backing device is not LUKS: $luks_dev"
+    return 1
+  fi
 
   echo "$luks_dev"
-}
-
-list_all_luks_devices() {
-  # List all block devices whose filesystem type is crypto_LUKS.
-  # Output format: /dev/<name> per line
-  lsblk -rpn -o NAME,FSTYPE 2>/dev/null \
-    | awk '$2 == "crypto_LUKS" { print $1 }'
-}
-
-device_has_fido2_enrolled() {
-  local luks_device="$1"
-  # systemd-cryptenroll --dump prints token info; we look for "fido2" in a conservative way.
-  # If dump fails, treat as not-enrolled (caller can decide to skip/error).
-  systemd-cryptenroll --dump "$luks_device" 2>/dev/null | grep -qiE '\bfido2\b'
-}
-
-enroll_fido2() {
-  local luks_device="$1"
-
-  if $DRY_RUN; then
-    info "[DRY-RUN] Would enroll FIDO2 on: $luks_device"
-    info "[DRY-RUN] Command: systemd-cryptenroll --fido2-device=auto --fido2-with-user-presence=yes $luks_device"
-    return 0
-  fi
-
-  info "Enrolling your YubiKey (FIDO2) with $luks_device..."
-  systemd-cryptenroll \
-    --fido2-device=auto \
-    --fido2-with-user-presence=yes \
-    "$luks_device"
-}
-
-enroll_fido2_all_luks_devices() {
-  local root_luks="$1"
-  local devices=()
-  local d
-
-  # Build list (preserve order): root first (if present), then others
-  while IFS= read -r d; do
-    [[ -n "$d" ]] && devices+=("$d")
-  done < <(list_all_luks_devices)
-
-  if [[ "${#devices[@]}" -eq 0 ]]; then
-    warn "No crypto_LUKS devices found via lsblk. Nothing to enroll."
-    return 0
-  fi
-
-  info "Discovered LUKS devices:"
-  for d in "${devices[@]}"; do
-    info "  - $d"
-  done
-
-  # Ensure root goes first if it is in the list
-  if [[ -n "$root_luks" ]]; then
-    local reordered=()
-    local seen_root=false
-    for d in "${devices[@]}"; do
-      if [[ "$d" == "$root_luks" ]]; then
-        seen_root=true
-      fi
-    done
-
-    if $seen_root; then
-      reordered+=("$root_luks")
-      for d in "${devices[@]}"; do
-        [[ "$d" == "$root_luks" ]] && continue
-        reordered+=("$d")
-      done
-      devices=("${reordered[@]}")
-    else
-      warn "Root LUKS device ($root_luks) was not found in lsblk crypto_LUKS list. Proceeding with discovered devices only."
-    fi
-  fi
-
-  for d in "${devices[@]}"; do
-    if [[ ! -b "$d" ]]; then
-      warn "Skipping (not a block device): $d"
-      continue
-    fi
-    if ! cryptsetup isLuks "$d" >/dev/null 2>&1; then
-      warn "Skipping (not LUKS): $d"
-      continue
-    fi
-
-    if device_has_fido2_enrolled "$d"; then
-      info "Skipping (FIDO2 already enrolled): $d"
-      continue
-    fi
-
-    enroll_fido2 "$d"
-  done
 }
 
 update_crypttab_all_entries() {
@@ -226,23 +143,23 @@ enable_initramfs_regen() {
     info "[DRY-RUN] Would run: rpm-ostree initramfs --enable"
     return 0
   fi
+  rpm-ostree initramfs --enable
+}
 
-  # rpm-ostree returns a non-zero exit code if it's already enabled.
-  # Treat that case as success.
-  local out
-  if out="$(rpm-ostree initramfs --enable 2>&1)"; then
-    info "Initramfs regeneration enabled."
+enroll_fido2() {
+  local luks_device="$1"
+
+  if $DRY_RUN; then
+    info "[DRY-RUN] Would enroll FIDO2 on: $luks_device"
+    info "[DRY-RUN] Command: systemd-cryptenroll --fido2-device=auto --fido2-with-user-presence=yes $luks_device"
     return 0
   fi
 
-  if echo "$out" | grep -qi "already enabled"; then
-    info "Initramfs regeneration already enabled; continuing."
-    return 0
-  fi
-
-  # Any other failure is real.
-  error "Failed to enable initramfs regeneration: $out"
-  return 1
+  info "Enrolling your YubiKey (FIDO2) with $luks_device..."
+  systemd-cryptenroll \
+    --fido2-device=auto \
+    --fido2-with-user-presence=yes \
+    "$luks_device"
 }
 
 main() {
@@ -258,11 +175,10 @@ main() {
   require_cmd date
   require_cmd lsblk
   require_cmd sed
-  require_cmd grep
 
   echo -e "\e[1;36mThis script will:\e[0m
   - Auto-detect your root LUKS device (composefs-safe via /sysroot)
-  - Enroll your YubiKey (FIDO2) on ALL detected LUKS devices (lsblk FSTYPE=crypto_LUKS)
+  - Enroll your YubiKey (FIDO2) using systemd-cryptenroll
   - Update /etc/crypttab (even with multiple entries) to include fido2-device=auto
   - Enable rpm-ostree initramfs regeneration
   - Prompt for reboot
@@ -307,20 +223,16 @@ YOU PROCEED ENTIRELY AT YOUR OWN RISK.
   fi
 
   info "Detecting root LUKS device..."
-  local root_luks_device
-  root_luks_device="$(detect_root_luks_device)" || { error "Auto-detect failed. Not making changes."; exit 1; }
-  info "Detected root LUKS device: $root_luks_device"
+  local luks_device
+  luks_device="$(detect_root_luks_device)" || { error "Auto-detect failed. Not making changes."; exit 1; }
+
+  info "Detected root LUKS device: $luks_device"
 
   info "Current mapping chain (lsblk):"
   lsblk -o NAME,TYPE,FSTYPE,MOUNTPOINT,PKNAME | sed 's/^/  /'
 
-  # Enroll FIDO2 for all LUKS devices (root first)
-  enroll_fido2_all_luks_devices "$root_luks_device"
-
-  # Ensure crypttab options are present for all active entries
+  enroll_fido2 "$luks_device"
   update_crypttab_all_entries
-
-  # Enable initramfs regeneration for early boot unlock support
   enable_initramfs_regen
 
   echo ""
@@ -336,7 +248,7 @@ YOU PROCEED ENTIRELY AT YOUR OWN RISK.
     info "Rebooting..."
     reboot
   else
-    info "Reboot later to test: with YubiKey inserted (touch/PIN as required), and without (fallback passphrase)."
+    info "Reboot later to test: with YubiKey inserted (touch), and without (fallback passphrase)."
   fi
 }
 

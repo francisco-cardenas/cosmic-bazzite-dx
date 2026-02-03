@@ -14,10 +14,10 @@
 
 set -euo pipefail
 
-# Status print helpers
-info()  { echo -e "\e[1;34m[INFO]\e[0m $*"; }
-warn()  { echo -e "\e[1;33m[WARN]\e[0m $*"; }
-error() { echo -e "\e[1;31m[ERROR]\e[0m $*"; }
+# Status print helpers (stderr so stdout can be used for return values)
+info()  { echo -e "\e[1;34m[INFO]\e[0m $*" >&2; }
+warn()  { echo -e "\e[1;33m[WARN]\e[0m $*" >&2; }
+error() { echo -e "\e[1;31m[ERROR]\e[0m $*" >&2; }
 
 usage() {
   cat <<'EOF'

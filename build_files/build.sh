@@ -2,18 +2,10 @@
 
 set -ouex pipefail
 
-### Install packages
-
-# Packages can be installed from any enabled yum repo on the image.
-# RPMfusion repos are available by default in ublue main images.
-# List of rpmfusion packages can be found here:
-# https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/updates/39/x86_64/repoview/index.html&protocol=https&redirect=1
-
-# Install base tools
+### Install base tools
 dnf5 install -y tmux zsh cups hplip fido2-tools
 
-
-# Install COSMIC and related components
+### Install COSMIC and related components
 dnf5 install -y \
     cosmic-edit \
     cosmic-files \
@@ -41,19 +33,29 @@ dnf5 install -y \
     xdg-desktop-portal-cosmic \
     cosmic-wallpapers
 
-#### Example for enabling a System Unit File
+### Enable system services
 systemctl enable podman.socket
-
-ls /ctx 
-
-### Configure ZSH
-install -Dm644 /ctx/files/etc/skel/.zshrc /usr/share/defaults/skel/.zshrc 
-
-### Post install script to $HOME
-install -Dm755 /ctx/files/etc/skel/post-install.sh /usr/share/defaults/skel/post-install.sh
 
 ### Dracut snippet for initramfs to include fido2 support
 install -Dm0644 /ctx/files/etc/dracut.conf.d/fido2.conf /etc/dracut.conf.d/fido2.conf
 
-### Enroll fido2 luks script
-install -Dm755 /ctx/files/etc/skel/enroll-fido2-luks.sh  /usr/share/defaults/skel/enroll-fido2-luks.sh
+### System commands
+install -Dm755 /ctx/files/usr/local/bin/enroll-fido2-luks /usr/local/bin/enroll-fido2-luks
+
+### cosmic-bazzite-dx shared resources
+install -Dm644 /ctx/files/usr/share/cosmic-bazzite-dx/homebrew/bazzite-dx.Brewfile \
+    /usr/share/cosmic-bazzite-dx/homebrew/bazzite-dx.Brewfile
+
+### cosmic-bazzite-dx setup scripts
+install -Dm755 /ctx/files/usr/share/cosmic-bazzite-dx/scripts/setup-dev.sh \
+    /usr/share/cosmic-bazzite-dx/scripts/setup-dev.sh
+install -Dm755 /ctx/files/usr/share/cosmic-bazzite-dx/scripts/setup-zsh.sh \
+    /usr/share/cosmic-bazzite-dx/scripts/setup-zsh.sh
+install -Dm755 /ctx/files/usr/share/cosmic-bazzite-dx/scripts/setup-apps.sh \
+    /usr/share/cosmic-bazzite-dx/scripts/setup-apps.sh
+
+### ujust recipes
+install -Dm644 /ctx/files/usr/share/ublue-os/just/96-cosmic-bazzite-dx-security.just \
+    /usr/share/ublue-os/just/96-cosmic-bazzite-dx-security.just
+install -Dm644 /ctx/files/usr/share/ublue-os/just/97-cosmic-bazzite-dx-setup.just \
+    /usr/share/ublue-os/just/97-cosmic-bazzite-dx-setup.just

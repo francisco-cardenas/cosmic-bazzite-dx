@@ -40,7 +40,8 @@ systemctl enable podman.socket
 install -Dm0644 /ctx/files/etc/dracut.conf.d/fido2.conf /etc/dracut.conf.d/fido2.conf
 
 ### System commands
-install -Dm755 /ctx/files/usr/local/bin/enroll-fido2-luks /usr/local/bin/enroll-fido2-luks
+mkdir -p "$(readlink -f /usr/local)/bin"
+install -m755 /ctx/files/usr/local/bin/enroll-fido2-luks /usr/local/bin/enroll-fido2-luks
 
 ### cosmic-bazzite-dx shared resources
 install -Dm644 /ctx/files/usr/share/cosmic-bazzite-dx/homebrew/bazzite-dx.Brewfile \

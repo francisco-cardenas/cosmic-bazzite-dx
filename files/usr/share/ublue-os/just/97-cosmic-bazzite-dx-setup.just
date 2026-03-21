@@ -17,3 +17,9 @@ setup-zsh:
 setup-apps:
     #!/usr/bin/bash
     bash /usr/share/cosmic-bazzite-dx/scripts/setup-apps.sh
+
+# Switch display manager between gdm and cosmic-greeter
+[group('cosmic-bazzite-dx')]
+switch-greeter *args:
+    #!/usr/bin/bash
+    sudo switch-greeter {{ args }}
